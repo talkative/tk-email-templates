@@ -1,0 +1,25 @@
+{
+	"name": "tk-email-templates",
+	"description": "Simple email templating system.",
+	"version": "0.0.1",
+	"author": {
+		"name": "Johannes Tegnér",
+		"email": "jitedev@gmail.com",
+		"company": "Talkative Labs"
+	},
+	"keywords": [
+		"email",
+		"template"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/talkative/tk-email-templates"
+	},
+	"main": "./main.js",
+	"engines": {
+		"node": "*"
+	},
+	"readmeFilename": "Readme.md",
+	"_id": "tk-email-templates@0.0.1",
+	"_from": "tk-email-templates@latest"
+}
