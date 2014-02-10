@@ -1,7 +1,7 @@
 {
 	"name": "tk-email-templates",
 	"description": "Simple email templating system.",
-	"version": "0.0.1",
+	"version": "0.1.0",
 	"author": {
 		"name": "Johannes Tegnér",
 		"email": "jitedev@gmail.com",
@@ -20,6 +20,6 @@
 		"node": "*"
 	},
 	"readmeFilename": "Readme.md",
-	"_id": "tk-email-templates@0.0.1",
+	"_id": "tk-email-templates@0.1.0",
 	"_from": "tk-email-templates@latest"
 }
