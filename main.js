@@ -1,12 +1,12 @@
 /**
-* tk-email-template
+* tk-email-templates
 * Email template system written by Johannes Tegnér @ Talkative Labs 2014-02-10
 * Usage example:
 * Template file (path/to/files/text.txt):
 *  This is a email {0} testing testing {0} {1}
 *  {1}
 * Javascript to load system and template:
-*   var emailtemplatesystem = require('../path/system.js')(".txt", "path/to/files");
+*   var emailtemplatesystem = require('tk-email-templates')(".txt", "path/to/files");
 *   emailtemplatesystem.get("test", ["hej", 5], function(email){
 *     console.log(email);
 *   });
@@ -66,11 +66,11 @@ module.exports = function(templatesPath, fileType) {
   }
 
   /**
-   * Include files from all {include|} in the file (if any).
-   * Function uses async file system operations.
-   * @param {string} data File as string that is to be included to.
-   * @param {function} callback Callback function: function(data, error); where error is only set if an error occurs.
-   */
+  * Include files from all {include|} in the file (if any).
+  * Function uses async file system operations.
+  * @param {string} data File as string that is to be included to.
+  * @param {function} callback Callback function: function(data, error); where error is only set if an error occurs.
+  */
   function getIncludes(data, callback) {
     if (data.indexOf("{include|") === -1) {
       callback(data);
