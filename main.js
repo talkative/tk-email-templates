@@ -96,7 +96,7 @@ module.exports = function(templatesPath, fileType) {
           if (done === includes.length) {
             callback(data, (errors.length > 0 ? "Error/s in 'getIncludes' function:\n" + errors.join("\n") : undefined));
           }
-        }(current));
+        }.bind(current));
       }
     }
   }
