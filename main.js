@@ -87,34 +87,25 @@ module.exports = function(templatesPath, fileType) {
       callback(data);
     } else {
       var regex1 = new RegExp("\\{include\\|(.+)\\}", 'g');
-      var match = null;
+      var match;
       var includes = [];
-      while (match = regex1.exec(data)) {
+      while((match = regex1.exec(data)) !== null){
         includes.push(match[1]);
       }
-      var length = includes.length, errors = [];
-      for (var i=includes.length;i-->0;) {
-        var curr = includes[i];
-        getFile(curr, function(file, error) {
-          if (error) {
-            errors.push(error);
-          } else if(file === null) {
-            errors.push("File was null.");
+      var errors = [];
+      var done = 0;
+      for(var i=includes.length;i-->0;) {
+        var current = includes[i];
+        getFile(current, function(file, error){
+          done++;
+          if (error || !file) {
+            errors.push(((error === undefined || error === null) && !file) ? "Could not fetch file (" + current + ")." : error);
           } else {
-            var regex = new RegExp("\\{include\\|" + curr + "}", 'g');
+            var regex = new RegExp("\\{include\\|" + current + "}", 'g');
             data = data.replace(regex, file);
           }
-          length--;
-          if (length === 0) {
-            if (errors.length > 0) {
-              var errorStr = "Error/s in 'getIncludes':\n";
-              for (var k=0;k<errors.length;k++) {
-                errorStr += errors[k] + "\n";
-              }
-              callback(data, errorStr)
-            } else {
-              callback(data);
-            }
+          if (done === includes.length) {
+            callback(data, (errors.length > 0 ? "Error/s in 'getIncludes' function:\n" + errors.join("\n") : undefined));
           }
         });
       }
