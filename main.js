@@ -26,12 +26,10 @@ var fs = require('fs');
 */
 module.exports = function(templatesPath, fileType) {
   if (templatesPath === undefined || templatesPath === null) {
-    utilities.error("tk-email-template - Failed to initialize: Path to templates is undefined.");
-    return null;
+    throw new Error("tk-email-template - Failed to initialize: Path to templates is undefined.");
   }
   if (fileType === undefined || fileType === null) {
-    utilities.error("tk-email-template - Failed to initialize: Templates file type is undefined.");
-    return null;
+    throw new Error("tk-email-template - Failed to initialize: Templates file type is undefined.");
   }
   if (fileType.indexOf('.') === -1) {
     utilities.debug("tk-email-template - The file type argument did not contain a '.' character.\n" +
@@ -39,15 +37,6 @@ module.exports = function(templatesPath, fileType) {
                     "Its possible that your template files do not use a file type, in that case ignore this info.\n" +
                     "Else this will produce an error when the system tries to fetch the templates.");
   }
-
-  /**
-  * File type of the template files.
-  */
-  var _templateFileType = fileType;
-  /**
-  * Path to template files.
-  */
-  var _templateFilePath =  templatesPath;
 
   /**
   * Storage for loaded files.
@@ -58,19 +47,19 @@ module.exports = function(templatesPath, fileType) {
   /**
   * Fetch template file.
   * @param {string} type Type of template (file name should match this + fileType).
-  * @param {cb} callback Callback to fire on done. email template on success else empty and error param set: function(email, error).
+  * @param {function} callback Callback to fire on done. email template on success else empty and error param set: function(email, error).
   */
-  function getFile(type, cb) {
+  function getFile(type, callback) {
     if (_loadedFiles[type] !== undefined) {
-      cb(_loadedFiles[type]);
+	    callback(_loadedFiles[type]);
     } else {
-      var path = _templateFilePath + type + _templateFileType;
+      var path = templatesPath + type + fileType;
       fs.readFile(path, function (error, data) {
         if (error) {
-          cb("", utilities.format("Failed to load file. Does the template file exist? (%s)", path));
+          callback("", utilities.format("Failed to load file. Does the template file exist? (%s)", path));
         } else {
           _loadedFiles[type] = data.toString();
-          getFile(type, cb);
+          getFile(type, callback);
         }
       });
     }
@@ -89,14 +78,14 @@ module.exports = function(templatesPath, fileType) {
       var regex1 = new RegExp("\\{include\\|(.+)\\}", 'g');
       var match;
       var includes = [];
-      while((match = regex1.exec(data)) !== null){
+      while ((match = regex1.exec(data)) !== null) {
         includes.push(match[1]);
       }
       var errors = [];
       var done = 0;
-      for(var i=includes.length;i-->0;) {
+      for (var i=includes.length;i-->0;) {
         var current = includes[i];
-        getFile(current, function(file, error){
+        getFile(current, function(file, error) {
           done++;
           if (error || !file) {
             errors.push(((error === undefined || error === null) && !file) ? "Could not fetch file (" + current + ")." : error);
@@ -107,7 +96,7 @@ module.exports = function(templatesPath, fileType) {
           if (done === includes.length) {
             callback(data, (errors.length > 0 ? "Error/s in 'getIncludes' function:\n" + errors.join("\n") : undefined));
           }
-        });
+        }(current));
       }
     }
   }
@@ -124,7 +113,7 @@ module.exports = function(templatesPath, fileType) {
         cb("", error);
       } else {
         //Includes should be fixed before replacing params, this cause the include files params should also be changed if any.
-        getIncludes(data, function(text, error){
+        getIncludes(data, function(text, error) {
           if (error) {
             utilities.error(error);
           }
