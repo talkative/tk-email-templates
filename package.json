@@ -19,7 +19,5 @@
 	"engines": {
 		"node": ">= 0.8.0"
 	},
-	"readmeFilename": "Readme.md",
-	"_id": "tk-email-templates@0.1.0",
-	"_from": "tk-email-templates@latest"
+	"readmeFilename": "Readme.md"
 }
