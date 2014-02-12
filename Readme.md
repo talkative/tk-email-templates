@@ -15,9 +15,10 @@ var templates = require('tk-email-templates')("path/to/template/files", ".txt");
 
 #### Create template/s.
 The templates use { brackets } for parameters and includes.  
-There are currently two possible types of usage:  
+Possible types of usage:  
 
     {param}                     // Single param, will be replaced with the object parameter passed in to the 'get' function that match.
+    {param.property}            // Object property param, will be replaced with the object parameter passed in to the 'get' function that match.
     {include|othertemplate}     // Includes another template file. The included file will be included before the params are set, so params will change in that one too.
 
 
@@ -41,6 +42,7 @@ This test email is sent from {username}.
 ```
 // _footer.txt
 This is the footer {anotherparam}.
+Or even a {obj.parameter}!
 ```
 
 ```javascript
@@ -48,6 +50,9 @@ templates = require('tk-email-templates')(path, ".txt");
 templates.get("test", {
     "username": "MyName"
   , "anotherparam": "Have a nice day"
+  , "obj": {
+      "parameter": "Object-parameter"
+    }
 }, function(formattedEmail, error){
   if(error !== undefined){
     util.error("Failed to format email.\nError:\n" + error);
@@ -63,4 +68,5 @@ In the above example the email output would be:
 ```
 This test email is sent from MyName.
 This is the footer Have a nice day.
+Or even a Object-parameter!
 ```

@@ -26,6 +26,7 @@ var fs = require('fs');
 * @param {string} fileType Template files file type.
 */
 module.exports = function(templatesPath, fileType) {
+  //Check templatesPath and fileType so they are set. They are required for the system to work, so errors will be thrown if any of them are missing.
   if (templatesPath === undefined || templatesPath === null) {
     throw new Error("tk-email-template - Failed to initialize: Path to templates is undefined.");
   }
@@ -74,7 +75,7 @@ module.exports = function(templatesPath, fileType) {
   */
   function setUpIncludes(data, callback) {
     if (data.indexOf("{include|") === -1) {
-      callback(data);
+      callback(data); // No includes in the file.
     } else {
       var regex1 = new RegExp("\\{include\\|(.+)\\}", 'g');
       var match;
@@ -110,17 +111,17 @@ module.exports = function(templatesPath, fileType) {
   * @param {object|array|string|number|boolean} val Value. 
   */
   function replace(text, pre, key, val) {
+    key = (pre === "" || pre === null || pre === undefined ? key : pre + "." + key); // If the pre param is not set or empty, the object is just the key.
     if(typeof val === "string" || typeof val === "number" || typeof val === "boolean") {
-      var regex = new RegExp("\\{" + (pre === "" || pre === null || pre === undefined ? key : pre + "." + key) + "\\}", 'g'); // If the pre param is not set or empty, the object is just the key.
-      text = text.replace(regex, val);
-    } else if(utilities.isArray(key)) {
+      var regex = new RegExp("\\{" + key + "\\}", 'g');
+      text = text.replace(regex, val.toString());
+    } else if(utilities.isArray(val)) {
       utilities.error("tk-email-template - Error while setting up template. Array used in argument, but array is not yet implemented."); // Show error but no exception.
     } else {
       for(var innerKey in val){
-        if (!val.hasOwnProperty(innerKey)) {
-          continue;
+        if (val.hasOwnProperty(innerKey)) {
+          text = replace(text, key, innerKey, val[innerKey]);
         }
-        text = replace(text, pre + "." + key, innerKey, val[innerKey]);
       }
     }
     return text;
@@ -144,10 +145,9 @@ module.exports = function(templatesPath, fileType) {
           }
           //Param replace.
           for (var key in args) {
-            if (!args.hasOwnProperty(key)) {
-              continue;
+            if (args.hasOwnProperty(key)) {
+              text = replace(text, "", key, args[key]); 
             }
-            text = replace(text, "", key, args[key]);
           }
           //Done, fire callback with the formatted text.
           cb(text);

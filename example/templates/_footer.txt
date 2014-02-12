@@ -1,2 +1,3 @@
 This is a footer.
 You can use parameters like : {package} (package) in the included files and they will be changed with the main file.
+Or parameters inside a passed object like: {project.id} (project.id).
