@@ -1,17 +1,18 @@
 /**
 * tk-email-templates
-* Email template system written by Johannes Tegnér @ Talkative Labs 2014-02-10
+* Simple template system written by Johannes Tegnér @ Talkative Labs 2014-02-10
+* Originally intended for Emails, but could be used for any type of templates.
 * Usage example:
 * Template file (path/to/files/text.txt):
-*  This is a email {0} testing testing {0} {1}
+*  This is a template {0} testing testing {0} {1}
 *  {1}
 * Javascript to load system and template:
-*   var emailtemplatesystem = require('tk-email-templates')(".txt", "path/to/files");
-*   emailtemplatesystem.get("test", ["hej", 5], function(email){
-*     console.log(email);
+*   var templatesystem = require('tk-email-templates')(".txt", "path/to/files");
+*   templatesystem.get("test", ["hej", 5], function(text){
+*     console.log(text);
 *   });
 * Result:
-*   This is a email hej testing testing hej 5
+*   This is a template hej testing testing hej 5
 *   5
 */
 
@@ -20,7 +21,7 @@ var utilities = require('util');
 var fs = require('fs');
 
 /**
-* Email template system.
+* Simple Template System.
 * @param {string} templatesPath Path to template files.
 * @param {string} fileType Template files file type.
 */
@@ -47,11 +48,11 @@ module.exports = function(templatesPath, fileType) {
   /**
   * Fetch template file.
   * @param {string} type Type of template (file name should match this + fileType).
-  * @param {function} callback Callback to fire on done. email template on success else empty and error param set: function(email, error).
+  * @param {function} callback Callback to fire on done. Template on success else empty and error param set: function(template, error).
   */
   function getFile(type, callback) {
     if (_loadedFiles[type] !== undefined) {
-	    callback(_loadedFiles[type]);
+      callback(_loadedFiles[type]);
     } else {
       var path = templatesPath + type + fileType;
       fs.readFile(path, function (error, data) {
@@ -71,7 +72,7 @@ module.exports = function(templatesPath, fileType) {
   * @param {string} data File as string that is to be included to.
   * @param {function} callback Callback function: function(data, error); where error is only set if an error occurs.
   */
-  function getIncludes(data, callback) {
+  function setUpIncludes(data, callback) {
     if (data.indexOf("{include|") === -1) {
       callback(data);
     } else {
@@ -102,10 +103,34 @@ module.exports = function(templatesPath, fileType) {
   }
 
   /**
-  * Get a formatted email template.
+  * Recursive replace function, will iterrate and replace (then return) the text passed using the "pre", "key" and "val" params for finding what to replace and with what.
+  * @param {string} text Text to replace data in.
+  * @param {string} pre Used to determine in the template how the key looks. This is the keys above in the object as a string.
+  * @param {string} key The object key (property name).
+  * @param {object|array|string|number|boolean} val Value. 
+  */
+  function replace(text, pre, key, val) {
+    if(typeof val === "string" || typeof val === "number" || typeof val === "boolean") {
+      var regex = new RegExp("\\{" + (pre === "" || pre === null || pre === undefined ? key : pre + "." + key) + "\\}", 'g'); // If the pre param is not set or empty, the object is just the key.
+      text = text.replace(regex, val);
+    } else if(utilities.isArray(key)) {
+      utilities.error("tk-email-template - Error while setting up template. Array used in argument, but array is not yet implemented."); // Show error but no exception.
+    } else {
+      for(var innerKey in val){
+        if (!val.hasOwnProperty(innerKey)) {
+          continue;
+        }
+        text = replace(text, pre + "." + key, innerKey, val[innerKey]);
+      }
+    }
+    return text;
+  }
+
+  /**
+  * Get a formatted template.
   * @param {string} type Type of template (file name should match this param).
   * @param {Array} args Argument list to replace template parameters ( {0}, {1} etc ). Number should match the param number in the template.
-  * @param {function} cb Callback on done. Formatted email template on success else empty string and error param set: function(email, error).
+  * @param {function} cb Callback on done. Formatted template on success else empty string and error param set: function(formattedText, error).
   */
   this.get = function(type, args, cb) {
     getFile(type, function(data, error) {
@@ -113,7 +138,7 @@ module.exports = function(templatesPath, fileType) {
         cb("", error);
       } else {
         //Includes should be fixed before replacing params, this cause the include files params should also be changed if any.
-        getIncludes(data, function(text, error) {
+        setUpIncludes(data, function(text, error) {
           if (error) {
             utilities.error(error);
           }
@@ -122,8 +147,7 @@ module.exports = function(templatesPath, fileType) {
             if (!args.hasOwnProperty(key)) {
               continue;
             }
-            var regex = new RegExp("\\{" + key + "\\}", 'g');
-            text = text.replace(regex, args[key]);
+            text = replace(text, "", key, args[key]);
           }
           //Done, fire callback with the formatted text.
           cb(text);
